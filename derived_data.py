@@ -7,12 +7,27 @@ cwd = os.getcwd()
 
 # SCHOOLS = f"{cwd}/data/schools.json"
 
-def derive_data(filename, min_math=None, max_math=None, min_eng=None, max_eng=None, state=None):
-    if not os.path.exists(filename):
-        print(f"Error: File '{filename}' not found.")
+def derive_data(dir_path, min_math=None, max_math=None, min_eng=None, max_eng=None, state=None):
+    if not os.path.isdir(dir_path):
+        print(f"Error: Directory '{dir_path}' not found.")
         return
 
-    schools = load_json_to_dict(filename)
+    # Combine all JSON files in the directory into one dictionary
+    schools = {}
+    for filename in os.listdir(dir_path):
+        if filename.endswith(".json"):
+            file_full_path = os.path.join(dir_path, filename)
+            data = load_json_to_dict(file_full_path)
+            # Update performs a shallow merge; if names duplicate, the last file wins
+            schools.update(data)
+
+    print(f"Loaded {len(schools)} total colleges from {dir_path}")
+    
+    # if not os.path.exists(filename):
+    #     print(f"Error: File '{filename}' not found.")
+    #     return
+
+    # schools = load_json_to_dict(filename)
     filtered_results = []
 
     for school, sdata in schools.items():
@@ -78,7 +93,7 @@ def derive_data(filename, min_math=None, max_math=None, min_eng=None, max_eng=No
 def main():
     parser = argparse.ArgumentParser(description="Filter/Sort USA Colleges by SAT Scores.")
     
-    parser.add_argument("--file", type=str, required=True, help="Path to schools.json")
+    parser.add_argument("--dir_path", type=str, required=True, help="Path to data json files")
     parser.add_argument("--min_math", type=int, help="Minimum SAT Math Score")
     parser.add_argument("--max_math", type=int, help="Maximum SAT Math Score")
     parser.add_argument("--min_eng", type=int, help="Minimum SAT English Score")
@@ -87,8 +102,8 @@ def main():
 
     args = parser.parse_args()
 
-    derive_data(args.file, args.min_math, args.max_math, args.min_eng, args.max_eng, args.state)
+    derive_data(args.dir_path, args.min_math, args.max_math, args.min_eng, args.max_eng, args.state)
 
 if __name__ == "__main__":
-  # uv run  derived_data.py --file src/collegedata/derived_data.py --min_math 750 --max_math 800
+  # uv run  derived_data.py --dir_path fdata/ --min_math 700 --max_math 800 --state=TX
   main()
